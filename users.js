@@ -46,8 +46,24 @@ const users =[
 ];
 
 const getUsers = (req, res) => {
+  let sql ='SELECT * FROM users';
+  const sqlValues = [];
+
+  if (req.query.language != null){
+    sql += 'WHERE language = ?'
+    sqlValues.push(req.query.language);
+  }
+  if (req.query.city != null) {
+    if (sqlValues.length === 0) {
+      sql += ' WHERE city = ?';
+    } else {
+      sql += ' AND city = ?';
+    }
+    sqlValues.push(req.query.city);
+  }
+
     database
-      .query("SELECT * FROM users")
+      .query(sql, sqlValues)
       .then(([users]) => {
         res.json(users); //a verifier!!!
       })
