@@ -47,13 +47,13 @@ const users =[
 
 const getUsers = (req, res) => {
     database
-      .query("select * from users")
+      .query("SELECT * FROM users")
       .then(([users]) => {
         res.json(users); //a verifier!!!
       })
       .catch((err) => {
         console.error(err);
-        res.status(500).send("Error retrieving data from database");
+        res.status(500).send("Error retrieving data FROM database");
       });
   };
 
@@ -61,7 +61,7 @@ const getUsers = (req, res) => {
     const id = parseInt(req.params.id);
   
     database
-      .query("select * from users where id = ?", [id])
+      .query("SELECt * FROM users WHERE id = ?", [id])
       .then(([users]) => {
         if (users[0] != null) {
           res.json(users[0]);
@@ -71,38 +71,60 @@ const getUsers = (req, res) => {
       })
       .catch((err) => {
         console.error(err);
-        res.status(500).send("Error retrieving data from database");
+        res.status(500).send("Error retrieving data FROM database");
       });
   };
-  const postUsers = (req, res) => {
+
+const postUsers = (req, res) => {
     const { title, director, year, color, duration } = req.body;
   
-  const updateUsers = (req,res)=>{
-    const id = parseInt(req.params.id);
-    const {title, director, year, color, duration} = req.body;
   
-    database
-      .query(
-        "Iudpate user set title = ?, director = ?, year = ?, color = ?, duration= ? where id = ?",
+  database
+    .query(
+        "NSERT INTO users (title, director, year, color)  ?",
+        [title, director, year, color, duration]
+    )
+    .then(([result]) => {
+      const id = result.insertId;
+      res.status(201).json(id,title, director, year, color)
+    })
+    .catch((err) => {
+        console.error(err);
+        res.status(500).send("Error creating");
+      }
+    );
+};
+
+const updateUsers = (req,res)=>{
+  const id = parseInt(req.params.id);
+  const {title, director, year, color, duration} = req.body;
+
+ 
+  database
+    .query(
+        "UPDATE user SET title = ?, director = ?, year = ?, color = ?, duration= ? where id = ?",
         [title, director, year, color, duration, id]
-      )
-      .then(([result]) => {
+    )
+    .then(([result]) => {
         if (result.affectedRows === 0) {
           res.status(404).send("Not Found");
         } else {
           res.sendStatus(204);
         }
-      })
-      .catch((err) => {
+      }
+    )
+    .catch((err) => {
         console.error(err);
-        res.status(500).send("Error editing the movie");
-      });
-  };
+        res.status(500).send("Error editing the user");
+      }
+    );
+};
+
 
   module.exports = {
     getUsers,
     getUsersId,
     postUsers,
     updateUsers,
-  }};
+  };
   
