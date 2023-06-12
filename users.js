@@ -91,49 +91,60 @@ const getUsers = (req, res) => {
       });
   };
 
-const postUsers = (req, res) => {
-    const { title, director, year, color, duration } = req.body;
+  const postUsers = (req, res) => {
+    const { title, director,year, color, duration, password } = req.body;
   
-  
-  database
-    .query(
-        "NSERT INTO users (title, director, year, color)  ?",
-        [title, director, year, color, duration]
-    )
-    .then(([result]) => {
-      const id = result.insertId;
-      res.status(201).json(id,title, director, year, color)
-    })
-    .catch((err) => {
+    argon2
+      .hash(password)
+      .then((hashedPassword) => {
+        database
+          .query("INSERT INTO users (title, director,year, color, duration, password ) VALUES (?, ?, ?)", [
+            title,
+            director,
+            year,
+            color,
+            duration,
+            hashedPassword,
+          ])
+          .then(([result]) => {
+            const id = result.insertId;
+            res.status(201).json({ id, title, director });
+          })
+          .catch((err) => {
+            console.error(err);
+            res.status(500).send("Error creating user");
+          });
+      })
+      .catch((err) => {
         console.error(err);
-        res.status(500).send("Error creating");
-      }
-    );
-};
-
+        res.status(500).send("Error hashing password");
+      });
+  };
+  
 const updateUsers = (req,res)=>{
   const id = parseInt(req.params.id);
-  const {title, director, year, color, duration} = req.body;
+  const {title, director, year, color, duration, password} = req.body;
 
- 
+  argon2
+  .hash(password)
+  .then((hashedPassword) => {
   database
     .query(
         "UPDATE user SET title = ?, director = ?, year = ?, color = ?, duration= ? where id = ?",
-        [title, director, year, color, duration, id]
+        [title, director, year, color, duration, hashedPassword, id]
     )
-    .then(([result]) => {
-        if (result.affectedRows === 0) {
-          res.status(404).send("Not Found");
-        } else {
-          res.sendStatus(204);
-        }
-      }
-    )
+    .then(() => {
+      res.sendStatus(200);
+    })
     .catch((err) => {
-        console.error(err);
-        res.status(500).send("Error editing the user");
-      }
-    );
+      console.error(err);
+      res.status(500).send("Error updating user");
+    });
+})
+.catch((err) => {
+  console.error(err);
+  res.status(500).send("Error hashing password");
+});
 };
 
 const deleteUsers = (req, res) => {

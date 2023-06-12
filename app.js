@@ -1,23 +1,29 @@
-require("dotenv").config();
-app.get("/", welcome);
-app.use(express.json());
-
 const express = require("express");
 const app = express();
 const { body } = require("express-validator");
 const dotenv = require("dotenv");
+
 dotenv.config();
+app.use(express.json());
 
 const welcome = (req, res) => {
   res.send("Welcome to my favourite movie list");
 };
+
 const port = process.env.APP_PORT || 5000;
 
-const { body, validationResult } = require('express-validator');
-const {validateMovie} = require("./validator");
+const { validationResult } = require('express-validator');
+const { validateMovie } = require("./validator")
 const movieHandlers = require("./movieHandlers");
 const users = require("./users");
-const {validateUser} = require("./validateUser")
+const { validateUser } = require("./validateUser");
+const { hashPassword } = require("./auth.js");
+const users= require("./users");
+
+app.get("/", welcome);
+
+app.post("/api/users", hashPassword, users.postUsers);
+app.put("/api/users/:id", hashPassword, users.updateUsers);
 
 // Route GET /api/movies pour renvoyer tous les films
 app.get("/api/movies", movieHandlers.getMovies);
