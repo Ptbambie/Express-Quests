@@ -10,6 +10,12 @@ app.use(express.json());
 
 const port = process.env.APP_PORT ?? 5001;
 
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  // Assurez-vous d'arrêter le processus si nécessaire
+  process.exit(1);
+});
+
 const welcome = (req, res) => {
   res.send('Welcome to my favourite movie list');
 };

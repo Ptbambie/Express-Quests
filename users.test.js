@@ -1,6 +1,6 @@
 const request = require("supertest");
 const app = require('./app');
-const crypto = require('crypto'); // N'oubliez pas d'importer le module crypto
+const crypto = require('crypto');
 
 describe("GET /api/users", () => {
     it("should return all users", async () => {
