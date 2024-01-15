@@ -101,4 +101,75 @@ describe("GET /api/users", () => {
       expect(response.status).toEqual(500);
     });
   });
+
+  describe("PUT /api/users/:id", () => {
+    it("should edit user", async () => {
+      // Ajoutez l'utilisateur à la base de données
+      const newUser = {
+        firstname: "John",
+        lastname: "Doe",
+        email: "john.doe@example.com",
+        city: "New York",
+        language: "English"
+      };
+  
+      const [result] = await database.query(
+        "INSERT INTO users(firstname, lastname, email, city, language) VALUES (?, ?, ?, ?, ?)",
+        [newUser.firstname, newUser.lastname, newUser.email, newUser.city, newUser.language]
+      );
+  
+      const id = result.insertId;
+  
+      // Met à jour l'utilisateur
+      const updatedUser = {
+        firstname: "Jane",
+        lastname: "Doe",
+        email: "jane.doe@example.com",
+        city: "Los Angeles",
+        language: "Spanish"
+      };
+  
+      const response = await request(app)
+        .put(`/api/users/${id}`)
+        .send(updatedUser);
+  
+      expect(response.status).toEqual(204);
+  
+      // Vérifie que l'utilisateur a été correctement mis à jour dans la base de données
+      const [users] = await database.query("SELECT * FROM users WHERE id=?", id);
+  
+      const [userInDatabase] = users;
+  
+      expect(userInDatabase).toHaveProperty("id");
+      expect(userInDatabase).toHaveProperty("firstname", updatedUser.firstname);
+      expect(userInDatabase).toHaveProperty("lastname", updatedUser.lastname);
+      expect(userInDatabase).toHaveProperty("email", updatedUser.email);
+      expect(userInDatabase).toHaveProperty("city", updatedUser.city);
+      expect(userInDatabase).toHaveProperty("language", updatedUser.language);
+    });
+  
+    it("should return an error for incomplete user data", async () => {
+      const userWithMissingProps = { firstname: "Incomplete" };
+  
+      const response = await request(app)
+        .put(`/api/users/1`)
+        .send(userWithMissingProps);
+  
+      expect(response.status).toEqual(500);
+    });
+  
+    it("should return 404 for non-existing user", async () => {
+      const newUser = {
+        firstname: "John",
+        lastname: "Doe",
+        email: "john.doe@example.com",
+        city: "New York",
+        language: "English"
+      };
+  
+      const response = await request(app).put("/api/users/0").send(newUser);
+  
+      expect(response.status).toEqual(404);
+    });
+  });
   

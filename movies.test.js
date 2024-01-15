@@ -108,3 +108,74 @@ describe("GET /api/movies", () => {
     });
   });
   
+  describe("PUT /api/movies/:id", () => {
+    it("should edit movie", async () => {
+      // Ajoutez le film à la base de données
+      const newMovie = {
+        title: "Avatar",
+        director: "James Cameron",
+        year: "2009",
+        color: "1",
+        duration: 162,
+      };
+  
+      const [result] = await database.query(
+        "INSERT INTO movies(title, director, year, color, duration) VALUES (?, ?, ?, ?, ?)",
+        [newMovie.title, newMovie.director, newMovie.year, newMovie.color, newMovie.duration]
+      );
+  
+      const id = result.insertId;
+  
+      // Mettez à jour le film
+      const updatedMovie = {
+        title: "Wild is Life",
+        director: "Alan Smithee",
+        year: "2023",
+        color: "0",
+        duration: 120,
+      };
+  
+      const response = await request(app)
+        .put(`/api/movies/${id}`)
+        .send(updatedMovie);
+  
+      expect(response.status).toEqual(204);
+  
+      // Vérifiez que le film a été correctement mis à jour dans la base de données
+      const [movies] = await database.query("SELECT * FROM movies WHERE id=?", id);
+  
+      const [movieInDatabase] = movies;
+  
+      expect(movieInDatabase).toHaveProperty("id");
+      expect(movieInDatabase).toHaveProperty("title", updatedMovie.title);
+      expect(movieInDatabase).toHaveProperty("director", updatedMovie.director);
+      expect(movieInDatabase).toHaveProperty("year", updatedMovie.year);
+      expect(movieInDatabase).toHaveProperty("color", updatedMovie.color);
+      expect(movieInDatabase).toHaveProperty("duration", updatedMovie.duration);
+    });
+  
+    it("should return an error for incomplete movie data", async () => {
+      const movieWithMissingProps = { title: "Harry Potter" };
+  
+      const response = await request(app)
+        .put(`/api/movies/1`)
+        .send(movieWithMissingProps);
+  
+      expect(response.status).toEqual(500);
+    });
+  
+    it("should return 404 for non-existing movie", async () => {
+      const newMovie = {
+        title: "Avatar",
+        director: "James Cameron",
+        year: "2009",
+        color: "1",
+        duration: 162,
+      };
+  
+      const response = await request(app).put("/api/movies/0").send(newMovie);
+  
+      expect(response.status).toEqual(404);
+    });
+  });
+  
